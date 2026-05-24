@@ -7,7 +7,6 @@ import com.hospital.hms.model.*;
 import com.hospital.hms.repository.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class HospitalService {

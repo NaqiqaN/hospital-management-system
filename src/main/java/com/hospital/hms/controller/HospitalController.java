@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.hospital.hms.service.HospitalService;
 import com.hospital.hms.model.*;
+import com.hospital.hms.dto.BookingRequest;
 
 import java.util.List;
 
@@ -45,6 +46,30 @@ public class HospitalController {
         patient,
         2,
         "09:00 AM"
+        );
+    }
+    
+    @PostMapping("/book")
+    public String bookAppointmentFromJson(@RequestBody BookingRequest request) {
+
+        Doctor doctor = new Doctor(
+            request.getDoctorId(),
+            request.getDoctorName(),
+            request.getSpecialization()
+        );
+
+        Patient patient = new Patient(
+            request.getPatientId(),
+            request.getPatientName(),
+            request.getDiagnosis(),
+            request.getFeePerHour()
+        );
+
+        return service.bookAppointment(
+            doctor,
+            patient,
+            0,
+            request.getAppointmentTime()
         );
     }
 
