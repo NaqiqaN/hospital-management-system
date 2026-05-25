@@ -128,7 +128,8 @@ public class HospitalService {
 
     public String clearAllAppointments() {
         appointmentRepo.deleteAll();
-        return "All appointments cleared.";
+        patientRepo.deleteAll();
+        return "All appointments and patients cleared.";
     }
 
     public List<Appointment> getAllAppointments() {
