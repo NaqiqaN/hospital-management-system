@@ -30,31 +30,7 @@ public class HospitalController {
     public String clearAppointments() {
         return service.clearAllAppointments();
     }
-    
-    @GetMapping("/book")
-    public String bookAppointment() {
 
-        Doctor doctor = new Doctor(
-        "D01",
-        "Sharma",
-        "Cardiology"
-        );
-
-        Patient patient = new Patient(
-        "P01",
-        "Ravi",
-        "Fever",
-        300
-        );
-
-        return service.bookAppointment(
-        doctor,
-        patient,
-        2,
-        "09:00 AM"
-        );
-    }
-    
     @PostMapping("/book")
     public String bookAppointmentFromJson(@RequestBody BookingRequest request) {
 
