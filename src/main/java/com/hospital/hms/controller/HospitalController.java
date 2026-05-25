@@ -25,6 +25,12 @@ public class HospitalController {
     public List<Appointment> getAppointments() {
         return service.getAllAppointments();
     }
+
+    @DeleteMapping("/appointments/clear")
+    public String clearAppointments() {
+        return service.clearAllAppointments();
+    }
+    
     @GetMapping("/book")
     public String bookAppointment() {
 

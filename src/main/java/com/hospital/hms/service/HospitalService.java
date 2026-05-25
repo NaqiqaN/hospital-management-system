@@ -19,45 +19,83 @@ public class HospitalService {
 
     @Autowired
     private AppointmentRepository appointmentRepo;
-    String[] availableSlots = {
-
-    "09:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "01:00 PM",
-    "02:00 PM",
-    "03:00 PM",
-    "04:00 PM",
-    "05:00 PM",
-    "06:00 PM",
-    "07:00 PM",
-    "08:00 PM",
-    "09:00 PM"
+    private final String[] availableSlots = {
+            "09:00 AM",
+            "10:00 AM",
+            "11:00 AM",
+            "12:00 PM",
+            "01:00 PM",
+            "02:00 PM",
+            "03:00 PM",
+            "04:00 PM",
+            "05:00 PM",
+            "06:00 PM",
+            "07:00 PM",
+            "08:00 PM",
+            "09:00 PM"
     };
-    
+
     // BOOK APPOINTMENT
     public String bookAppointment(Doctor doctor, Patient patient, int slot, String time) {
 
-        // Save doctor if not exists
         if (!doctorRepo.existsById(doctor.getId())) {
             doctorRepo.save(doctor);
         }
 
-        // Save patient if not exists
         if (!patientRepo.existsById(patient.getId())) {
             patientRepo.save(patient);
         }
 
-        // Create appointment
-        Appointment apt = new Appointment(time);
+        String assignedTime = findAvailableSlot(time);
+
+        if (assignedTime == null) {
+            return "No available appointment slots between 09:00 AM and 09:00 PM";
+        }
+
+        Appointment apt = new Appointment(assignedTime);
         apt.setDoctor(doctor);
         apt.setPatient(patient);
 
         appointmentRepo.save(apt);
 
         return patient.getName() + " booked with " +
-               doctor.getName() + " at slot " + slot;
+                doctor.getName() + " at " + assignedTime;
+    }
+
+    private String findAvailableSlot(String requestedTime) {
+
+        List<Appointment> existingAppointments = appointmentRepo.findAll();
+
+        int startIndex = -1;
+
+        for (int i = 0; i < availableSlots.length; i++) {
+            if (availableSlots[i].equalsIgnoreCase(requestedTime)) {
+                startIndex = i;
+                break;
+            }
+        }
+
+        if (startIndex == -1) {
+            return null;
+        }
+
+        for (int i = startIndex; i < availableSlots.length; i++) {
+
+            boolean isBooked = false;
+
+            for (Appointment apt : existingAppointments) {
+                if (apt.getAppointmentTime().equalsIgnoreCase(availableSlots[i])) {
+                    isBooked = true;
+                    break;
+                }
+            }
+
+            if (!isBooked) {
+                return availableSlots[i];
+            }
+        }
+
+        return null;
     }
 
     // DISCHARGE PATIENT
@@ -67,7 +105,7 @@ public class HospitalService {
 
         for (Appointment apt : list) {
             if (apt.getPatient() != null &&
-                apt.getPatient().getId().equals(patientId)) {
+                    apt.getPatient().getId().equals(patientId)) {
 
                 int fee = apt.getPatient().getFeePerHour() * hours;
 
@@ -77,6 +115,11 @@ public class HospitalService {
             }
         }
         return "Patient not found";
+    }
+
+    public String clearAllAppointments() {
+        appointmentRepo.deleteAll();
+        return "All appointments cleared.";
     }
 
     // VIEW ALL APPOINTMENTS
