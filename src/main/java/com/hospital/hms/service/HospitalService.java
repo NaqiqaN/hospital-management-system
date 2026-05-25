@@ -19,6 +19,7 @@ public class HospitalService {
 
     @Autowired
     private AppointmentRepository appointmentRepo;
+
     private final String[] availableSlots = {
             "09:00 AM",
             "10:00 AM",
@@ -35,7 +36,6 @@ public class HospitalService {
             "09:00 PM"
     };
 
-    // BOOK APPOINTMENT
     public String bookAppointment(Doctor doctor, Patient patient, int slot, String time) {
 
         if (!doctorRepo.existsById(doctor.getId())) {
@@ -84,7 +84,8 @@ public class HospitalService {
             boolean isBooked = false;
 
             for (Appointment apt : existingAppointments) {
-                if (apt.getAppointmentTime().equalsIgnoreCase(availableSlots[i])) {
+                if (apt.getAppointmentTime() != null &&
+                    apt.getAppointmentTime().equalsIgnoreCase(availableSlots[i])) {
                     isBooked = true;
                     break;
                 }
@@ -98,14 +99,13 @@ public class HospitalService {
         return null;
     }
 
-    // DISCHARGE PATIENT
     public String dischargePatient(String patientId, int hours) {
 
         List<Appointment> list = appointmentRepo.findAll();
 
         for (Appointment apt : list) {
             if (apt.getPatient() != null &&
-                    apt.getPatient().getId().equals(patientId)) {
+                apt.getPatient().getId().equals(patientId)) {
 
                 int fee = apt.getPatient().getFeePerHour() * hours;
 
@@ -114,6 +114,7 @@ public class HospitalService {
                 return "Patient discharged. Fee = Rs." + fee;
             }
         }
+
         return "Patient not found";
     }
 
@@ -122,7 +123,6 @@ public class HospitalService {
         return "All appointments cleared.";
     }
 
-    // VIEW ALL APPOINTMENTS
     public List<Appointment> getAllAppointments() {
         return appointmentRepo.findAll();
     }
