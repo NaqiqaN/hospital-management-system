@@ -36,78 +36,76 @@ public class HospitalService {
             "09:00 PM"
     };
 
-public String bookAppointment(Doctor doctor, Patient patient, int slot, String time) {
+    public String bookAppointment(Doctor doctor, Patient patient, int slot, String time) {
 
-    if (!doctorRepo.existsById(doctor.getId())) {
-        doctorRepo.save(doctor);
-    }
-
-    if (patientRepo.existsById(patient.getId())) {
-        return "Patient ID already exists. Please use a new Patient ID.";
-    }
-
-    patientRepo.save(patient);
-
-    String assignedTime = findAvailableSlot(time, doctor.getId());
-
-    if (assignedTime == null) {
-        return "No available slots for Dr. " + doctor.getName();
-    }
-
-    Appointment apt = new Appointment(assignedTime);
-
-    apt.setDoctor(doctor);
-    apt.setPatient(patient);
-
-    appointmentRepo.save(apt);
-
-    return patient.getName() + " booked with " +
-            doctor.getName() + " at " + assignedTime;
-}
-
-private String findAvailableSlot(String requestedTime, String doctorId) {
-
-    List<Appointment> existingAppointments = appointmentRepo.findAll();
-
-    int startIndex = -1;
-
-    for (int i = 0; i < availableSlots.length; i++) {
-
-        if (availableSlots[i].equalsIgnoreCase(requestedTime)) {
-            startIndex = i;
-            break;
+        if (!doctorRepo.existsById(doctor.getId())) {
+            doctorRepo.save(doctor);
         }
+
+        if (patientRepo.existsById(patient.getId())) {
+            return "Patient ID already exists. Please use a new Patient ID.";
+        }
+
+        patientRepo.save(patient);
+
+        String assignedTime = findAvailableSlot(time, doctor.getId());
+
+        if (assignedTime == null) {
+            return "No available slots for Dr. " + doctor.getName();
+        }
+
+        Appointment apt = new Appointment(assignedTime);
+
+        apt.setDoctor(doctor);
+        apt.setPatient(patient);
+
+        appointmentRepo.save(apt);
+
+        return patient.getName() + " booked with " +
+                doctor.getName() + " at " + assignedTime;
     }
 
-    if (startIndex == -1) {
-        return null;
-    }
+    private String findAvailableSlot(String requestedTime, String doctorId) {
 
-    for (int i = startIndex; i < availableSlots.length; i++) {
+        List<Appointment> existingAppointments = appointmentRepo.findAll();
 
-        boolean isBooked = false;
+        int startIndex = -1;
 
-        for (Appointment apt : existingAppointments) {
+        for (int i = 0; i < availableSlots.length; i++) {
 
-            if (
-                apt.getAppointmentTime() != null &&
-                apt.getDoctor() != null &&
-                apt.getDoctor().getId().equals(doctorId) &&
-                apt.getAppointmentTime().equalsIgnoreCase(availableSlots[i])
-            ) {
-
-                isBooked = true;
+            if (availableSlots[i].equalsIgnoreCase(requestedTime)) {
+                startIndex = i;
                 break;
             }
         }
 
-        if (!isBooked) {
-            return availableSlots[i];
+        if (startIndex == -1) {
+            return null;
         }
-    }
 
-    return null;
-}
+        for (int i = startIndex; i < availableSlots.length; i++) {
+
+            boolean isBooked = false;
+
+            for (Appointment apt : existingAppointments) {
+
+                if (apt.getAppointmentTime() != null &&
+                        apt.getDoctor() != null &&
+                        apt.getDoctor().getId().equals(doctorId) &&
+                        apt.getAppointmentTime().equalsIgnoreCase(availableSlots[i])) {
+
+                    isBooked = true;
+                    break;
+                }
+            }
+
+            if (!isBooked) {
+                return availableSlots[i];
+            }
+        }
+
+        return null;
+    }
 
     public String dischargePatient(String patientId, int hours) {
 
@@ -115,11 +113,11 @@ private String findAvailableSlot(String requestedTime, String doctorId) {
 
         for (Appointment apt : list) {
             if (apt.getPatient() != null &&
-                apt.getPatient().getId().equals(patientId)) {
+                    apt.getPatient().getId().equals(patientId)) {
 
                 int fee = apt.getPatient().getFeePerHour() * hours;
-
                 appointmentRepo.delete(apt);
+                patientRepo.deleteById(patientId);
 
                 return "Patient discharged. Fee = Rs." + fee;
             }
