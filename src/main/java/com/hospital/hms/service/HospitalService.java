@@ -36,68 +36,78 @@ public class HospitalService {
             "09:00 PM"
     };
 
-    public String bookAppointment(Doctor doctor, Patient patient, int slot, String time) {
+public String bookAppointment(Doctor doctor, Patient patient, int slot, String time) {
 
-        if (!doctorRepo.existsById(doctor.getId())) {
-            doctorRepo.save(doctor);
-        }
-
-        if (!patientRepo.existsById(patient.getId())) {
-            patientRepo.save(patient);
-        }
-
-        String assignedTime = findAvailableSlot(time);
-
-        if (assignedTime == null) {
-            return "No available appointment slots between 09:00 AM and 09:00 PM";
-        }
-
-        Appointment apt = new Appointment(assignedTime);
-        apt.setDoctor(doctor);
-        apt.setPatient(patient);
-
-        appointmentRepo.save(apt);
-
-        return patient.getName() + " booked with " +
-                doctor.getName() + " at " + assignedTime;
+    if (!doctorRepo.existsById(doctor.getId())) {
+        doctorRepo.save(doctor);
     }
 
-    private String findAvailableSlot(String requestedTime) {
+    if (patientRepo.existsById(patient.getId())) {
+        return "Patient ID already exists. Please use a new Patient ID.";
+    }
 
-        List<Appointment> existingAppointments = appointmentRepo.findAll();
+    patientRepo.save(patient);
 
-        int startIndex = -1;
+    String assignedTime = findAvailableSlot(time, doctor.getId());
 
-        for (int i = 0; i < availableSlots.length; i++) {
-            if (availableSlots[i].equalsIgnoreCase(requestedTime)) {
-                startIndex = i;
+    if (assignedTime == null) {
+        return "No available slots for Dr. " + doctor.getName();
+    }
+
+    Appointment apt = new Appointment(assignedTime);
+
+    apt.setDoctor(doctor);
+    apt.setPatient(patient);
+
+    appointmentRepo.save(apt);
+
+    return patient.getName() + " booked with " +
+            doctor.getName() + " at " + assignedTime;
+}
+
+private String findAvailableSlot(String requestedTime, String doctorId) {
+
+    List<Appointment> existingAppointments = appointmentRepo.findAll();
+
+    int startIndex = -1;
+
+    for (int i = 0; i < availableSlots.length; i++) {
+
+        if (availableSlots[i].equalsIgnoreCase(requestedTime)) {
+            startIndex = i;
+            break;
+        }
+    }
+
+    if (startIndex == -1) {
+        return null;
+    }
+
+    for (int i = startIndex; i < availableSlots.length; i++) {
+
+        boolean isBooked = false;
+
+        for (Appointment apt : existingAppointments) {
+
+            if (
+                apt.getAppointmentTime() != null &&
+                apt.getDoctor() != null &&
+                apt.getDoctor().getId().equals(doctorId) &&
+                apt.getAppointmentTime().equalsIgnoreCase(availableSlots[i])
+            ) {
+
+                isBooked = true;
                 break;
             }
         }
 
-        if (startIndex == -1) {
-            return null;
+        if (!isBooked) {
+            return availableSlots[i];
         }
-
-        for (int i = startIndex; i < availableSlots.length; i++) {
-
-            boolean isBooked = false;
-
-            for (Appointment apt : existingAppointments) {
-                if (apt.getAppointmentTime() != null &&
-                    apt.getAppointmentTime().equalsIgnoreCase(availableSlots[i])) {
-                    isBooked = true;
-                    break;
-                }
-            }
-
-            if (!isBooked) {
-                return availableSlots[i];
-            }
-        }
-
-        return null;
     }
+
+    return null;
+}
 
     public String dischargePatient(String patientId, int hours) {
 
