@@ -1,6 +1,7 @@
 package com.hospital.hms.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import com.hospital.hms.model.*;
@@ -19,6 +20,9 @@ public class HospitalService {
 
     @Autowired
     private AppointmentRepository appointmentRepo;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private final String[] availableSlots = {
             "09:00 AM",
@@ -129,7 +133,8 @@ public class HospitalService {
     public String clearAllAppointments() {
         appointmentRepo.deleteAll();
         patientRepo.deleteAll();
-        return "All appointments and patients cleared.";
+        jdbcTemplate.execute("ALTER TABLE appointments ALTER COLUMN appointment_number RESTART WITH 1");
+        return "All appointments and patients cleared. Appointment numbering reset.";
     }
 
     public List<Appointment> getAllAppointments() {
